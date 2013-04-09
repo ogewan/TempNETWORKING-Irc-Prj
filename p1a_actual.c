@@ -25,6 +25,11 @@ int main()
 	char peer[128];
 	char buf[1024];
 	int bytes = 0;
+    char* msg;
+    msg[510] = '\r';
+    msg[511] = '\n';
+    char* nick;
+    char* user;
 	/*:hostname 001 user1 :*/
 	/* user1!user1@foo.example.com\r\n*/
 	/*:hostname RPL_WELCOME-numericcode nick :*/
@@ -57,13 +62,49 @@ int main()
 			getnameinfo(&cadr, sizeof(cadr),peer, sizeof(peer), NULL, NULL, 0);
 		}
 		bytes = recv(csckt, buf, sizeof(buf),0);
+        /*Begin PSEUDOCODE
+        if len(inactive) = 0 and "/r/n" is in buf:
+            if there is anything after "/r/n":
+                stringarray = substrings
+                for len of stringarray:
+                    if substring has "/r/n":
+                        parse(substring)
+                    else:
+                        append(inactive,substring)
+                
+            active = buf
+                if len(active) > 510:
+                    truncate(active,510)
+                    append(active,"/r/n")
+        else:
+            append(inactive,buf)
+            if "/r/n" is in inactive:
+                active = inactive
+                inactive = 0 (clear inactive,fill with null char)
+            else:
+                if len(inactive) > 510:
+                    truncate(inactive,510)
+        if active:
+            parse(active)
+            active = 0
+                    
+        END PSUEDOCODE*/
 		if (bytes)
 		{
-			printf("Recieved\n");
+			printf("Received\n");
 			char jubby[1028];
 			sprintf(jubby, "%d", bytes);	
 			send(jubby, peer, strlen(jubby), 0);
 		}
+        
+        
+        
+        msg = strtok(buf, " ");
+        if( strcmp(msg, "NICK") == 0)
+            nick = strtok(NULL, " ");
+        else if( strcmp(msg, "USER") == 0)
+            user = strtok(NULL, " ");    
+        
 		/*Ignore every response other than Nick and User
 		/*csckt = accept(ssckt, (struct sockaddr *) &cadr, &sktsz);
 		/*get peername
@@ -75,7 +116,7 @@ int main()
 		/*/			
 		char* res =  "RESPONSE\n";
 		/*send(res, peer, strlen(res), 0);/*Send response to client*/
-		printf("connected:%s %d\n", peer,bytes);
+        printf("connected:%s %d\n", peer,bytes);
 	}
 
 	close(ssckt);
