@@ -23,7 +23,6 @@ int main()
 	int usrcount = 0;
 	char hostname[128];
 	char peer[128];
-	char buf[1024];
 	int bytes = 0;
     char* msg;
     msg[510] = '\r';
@@ -54,6 +53,17 @@ int main()
 	
 	printf("Initializing Server:%s\n",hostname);
 	
+	char buf[1024];
+	char active[2048];
+	char inactive[2048];
+	for (int u = 0; u != 2048; u++) {
+		active[u] = '\0';
+		inactive[u] = '\0';
+	}
+	for (u = 0; u != 1024; u++) {
+		buf[u] = '\0';
+	}
+
 	while(1)
 	{
 		if (!csckt)
@@ -61,9 +71,15 @@ int main()
 			csckt = accept(ssckt, (struct sockaddr *) &cadr, &sktsz);
 			getnameinfo(&cadr, sizeof(cadr),peer, sizeof(peer), NULL, NULL, 0);
 		}
+		for (u = 0; u != 1024; u++) {
+			buf[u] = '\0';
+		}
 		bytes = recv(csckt, buf, sizeof(buf),0);
+
         /*Begin PSEUDOCODE
-        if len(inactive) = 0 and "/r/n" is in buf:
+		char * target = strstr(buf,"\r\n");
+        if (!len(inactive) and target){
+			
             if there is anything after "/r/n":
                 stringarray = substrings
                 for len of stringarray:
@@ -84,7 +100,7 @@ int main()
             else:
                 if len(inactive) > 510:
                     truncate(inactive,510)
-        if active:
+        if active: 
             parse(active)
             active = 0
                     
